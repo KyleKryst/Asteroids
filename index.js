@@ -4,9 +4,6 @@ const context = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-context.fillStyle = 'black';
-context.fillRect(0, 0, canvas.width, canvas.height);
-
 class Player {
     constructor({position, velocity}) {
         this.position = position // {x, y}
@@ -30,6 +27,12 @@ class Player {
         context.fillStyle = 'yellow';
         context.fill();
     }
+
+        update() {
+            this.draw()
+            this.position.x += this.velocity.x
+            this.position.y += this.velocity.y
+        }
 };
 
 const player = new Player({
@@ -37,6 +40,39 @@ const player = new Player({
     velocity: { x: 0, y: 0 },
 });
 
-player.draw();
+const keys = {
+    uparrow: {
+        pressed: false
+    }
+};
 
-console.log(player)
+function animate() {
+    window.requestAnimationFrame(animate)
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    player.update()
+
+    if (keys.uparrow.pressed) player.velocity.x = 1
+};
+
+animate();
+
+window.addEventListener('keydown', (event) => {
+    switch (event.code) {
+        case 'ArrowLeft':
+            console.log('left arrow was pressed')
+            break
+        case 'ArrowDown':
+            console.log('down arrow was pressed')
+            break
+         case 'ArrowRight':
+            console.log('right arrow was pressed')
+            break
+        case 'ArrowUp':
+            console.log('up arrow was pressed')
+            keys.uparrow.pressed = true
+            break
+
+    }
+});

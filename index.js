@@ -22,8 +22,6 @@ class Player {
         context.fillStyle = 'red';
         context.fill();
 
-        // context.fillStyle = 'green';
-        // context.fillRect(this.position.x, this.position.y, 50, 100); // {x, y, width, height}
         context.beginPath();
         context.moveTo(this.position.x + 30, this.position.y);
         context.lineTo(this.position.x - 10, this.position.y - 10);
@@ -31,13 +29,20 @@ class Player {
         context.closePath();
 
 
-        context.arc(this.position.x, this.position.y, 5, 0, Math.PI * 2, false);
+        context.arc(this.position.x - 1, this.position.y, 5, 0, Math.PI * 2, false);
         context.fillStyle = 'red';
         context.fill();
+
+        context.arc(this.position.x + 10, this.position.y, 4, 0, Math.PI * 2, false);
+        context.fillStyle = 'red';
+        context.fill();
+
         context.strokeStyle = 'orange';
         context.stroke();
+
         context.fillStyle = 'yellow';
         context.fill();
+
         context.restore();
     }
 
@@ -46,6 +51,28 @@ class Player {
             this.position.x += this.velocity.x
             this.position.y += this.velocity.y
         }
+};
+
+class Projectile {
+    constructor({position, velocity}) {
+        this.position = position
+        this.velocity = velocity
+        this.radius = 5
+    }
+
+    draw(){
+        context.beginPath()
+        context.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false)
+        context.closePath()
+        context.fillStyle = 'red'
+        context.fill()
+    }
+
+    update() {
+        this.draw()
+        this.position.x += this.velocity.x
+        this.position.y += this.velocity.y
+    }
 };
 
 const player = new Player({
@@ -66,8 +93,11 @@ const keys = {
 };
 
 const SPEED = 3
+const PROJECTILE_SPEED = 4
 const ROTATIONAL_SPEED = 0.05
 const FRICTION = 0.97
+
+const projectiles = []
 
 function animate() {
     window.requestAnimationFrame(animate)
@@ -76,11 +106,25 @@ function animate() {
     
     player.update()
 
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const projectile = projectiles[i]
+        projectile.update()
+
+        // garbage collection for projectiles
+        if (projectile.position.x + projectile.radius < 0 ||
+            projectile.position.x - projectile.radius > canvas.width ||
+            projectile.position.y - projectile.radius > canvas.height ||
+            projectile.position.y + projectile.radius < 0
+            ) {
+            projectiles.splice(i, 1)
+        }
+    }
+
     if (keys.w.pressed) {
         player.velocity.x = Math.cos(player.rotation) * SPEED
         player.velocity.y = Math.sin(player.rotation) * SPEED
     } else if (!keys.w.pressed) {
-        player.velocity.x *= FRICTION //delayed stop on screen
+        player.velocity.x *= FRICTION // delayed stop on screen
         player.velocity.y *= FRICTION
     }
 
@@ -101,6 +145,20 @@ window.addEventListener('keydown', (event) => {
          case 'KeyD':
             keys.d.pressed = true
             break
+            case 'Space':
+                projectiles.push(new Projectile({
+                    position: {
+                        x: player.position.x + Math.cos(player.rotation) * 30,
+                        y: player.position.y + Math.sin(player.rotation) * 30
+                    },
+                    velocity: {
+                        x: Math.cos(player.rotation) * PROJECTILE_SPEED,
+                        y: Math.sin(player.rotation) * PROJECTILE_SPEED
+                    }
+                }))
+
+                console.log(projectiles)
+                break
     }
 });
 

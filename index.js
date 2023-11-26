@@ -8,24 +8,37 @@ class Player {
     constructor({position, velocity}) {
         this.position = position // {x, y}
         this.velocity = velocity // {x, y}
+        this.rotation = 0
     }
 
     draw() {
+        context.save();
+
+        context.translate(this.position.x, this.position.y);
+        context.rotate(this.rotation);
+        context.translate(-this.position.x, -this.position.y);
+
         context.arc(this.position.x, this.position.y, 5, 0, Math.PI * 2, false);
         context.fillStyle = 'red';
         context.fill();
 
         // context.fillStyle = 'green';
         // context.fillRect(this.position.x, this.position.y, 50, 100); // {x, y, width, height}
+        context.beginPath();
         context.moveTo(this.position.x + 30, this.position.y);
         context.lineTo(this.position.x - 10, this.position.y - 10);
         context.lineTo(this.position.x - 10, this.position.y + 10);
         context.closePath();
 
+
+        context.arc(this.position.x, this.position.y, 5, 0, Math.PI * 2, false);
+        context.fillStyle = 'red';
+        context.fill();
         context.strokeStyle = 'orange';
         context.stroke();
         context.fillStyle = 'yellow';
         context.fill();
+        context.restore();
     }
 
         update() {
@@ -41,10 +54,20 @@ const player = new Player({
 });
 
 const keys = {
-    uparrow: {
+    w: {
         pressed: false
-    }
+    },
+    a: {
+        pressed: false
+    },
+    d: {
+        pressed: false
+    },
 };
+
+const SPEED = 3
+const ROTATIONAL_SPEED = 0.05
+const FRICTION = 0.97
 
 function animate() {
     window.requestAnimationFrame(animate)
@@ -53,26 +76,44 @@ function animate() {
     
     player.update()
 
-    if (keys.uparrow.pressed) player.velocity.x = 1
+    if (keys.w.pressed) {
+        player.velocity.x = Math.cos(player.rotation) * SPEED
+        player.velocity.y = Math.sin(player.rotation) * SPEED
+    } else if (!keys.w.pressed) {
+        player.velocity.x *= FRICTION //delayed stop on screen
+        player.velocity.y *= FRICTION
+    }
+
+    if (keys.d.pressed) player.rotation += ROTATIONAL_SPEED
+        else if (keys.a.pressed) player.rotation -= ROTATIONAL_SPEED
 };
 
 animate();
 
 window.addEventListener('keydown', (event) => {
     switch (event.code) {
-        case 'ArrowLeft':
-            console.log('left arrow was pressed')
+        case 'KeyW':
+            keys.w.pressed = true
             break
-        case 'ArrowDown':
-            console.log('down arrow was pressed')
+        case 'KeyA':
+            keys.a.pressed = true
             break
-         case 'ArrowRight':
-            console.log('right arrow was pressed')
+         case 'KeyD':
+            keys.d.pressed = true
             break
-        case 'ArrowUp':
-            console.log('up arrow was pressed')
-            keys.uparrow.pressed = true
-            break
+    }
+});
 
+window.addEventListener('keyup', (event) => {
+    switch (event.code) {
+        case 'KeyW':
+            keys.w.pressed = false
+            breakwd
+        case 'KeyA':
+            keys.a.pressed = false
+            break
+         case 'KeyD':
+            keys.d.pressed = false
+            break
     }
 });

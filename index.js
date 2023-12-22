@@ -18,9 +18,11 @@ class Player {
         context.rotate(this.rotation);
         context.translate(-this.position.x, -this.position.y);
 
+        context.beginPath()
         context.arc(this.position.x, this.position.y, 5, 0, Math.PI * 2, false);
         context.fillStyle = 'red';
         context.fill();
+        context.closePath();
 
         context.beginPath();
         context.moveTo(this.position.x + 30, this.position.y);
@@ -54,7 +56,7 @@ class Player {
 };
 
 class Projectile {
-    constructor({position, velocity}) {
+    constructor({ position, velocity }) {
         this.position = position
         this.velocity = velocity
         this.radius = 5
@@ -65,6 +67,31 @@ class Projectile {
         context.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false)
         context.closePath()
         context.fillStyle = 'red'
+        context.fill()
+    }
+
+    update() {
+        this.draw()
+        this.position.x += this.velocity.x
+        this.position.y += this.velocity.y
+    }
+};
+
+class Asteroid {
+    constructor({ position, velocity, radius}) {
+        this.position = position
+        this.velocity = velocity
+        this.radius = radius
+    }
+
+    draw() {
+        context.beginPath()
+        context.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false)
+        context.closePath()
+
+        context.strokeStyle = 'orange'
+        context.stroke()
+        context.fillStyle = 'yellow'
         context.fill()
     }
 
@@ -98,6 +125,56 @@ const ROTATIONAL_SPEED = 0.05
 const FRICTION = 0.97
 
 const projectiles = []
+const asteroids = []
+
+window.setInterval (() => {
+    const index = Math.floor(Math.random() * 4)
+    let x, y
+    let vx, vy
+    let radius = 50 * Math.random() + 10
+
+    switch (index) {
+        case 0: //left side of the screen
+            x = 0 - radius
+            y = Math.random() * canvas.height
+            vx = 1
+            vy = 0
+            break
+        case 1: //bottom of the screen
+            x = Math.random() * canvas.width
+            y = canvas.height + radius
+            vx = 0
+            vy = -1
+            break     
+        case 2: //right side of the screen
+            x = canvas.width + radius
+            y = Math.random() * canvas.height
+            vx = -1
+            vy = 0
+            break  
+        case 3: //top of the screen
+            x = Math.random() * canvas.width
+            y = 0 - radius
+            vx = 0
+            vy = 1
+            break
+    }
+
+    asteroids.push(
+        new Asteroid({
+            position: {
+            x: x,
+            y: y,
+            },
+            velocity: {
+            x: vx,
+            y: vy,
+            },
+            radius,
+        })
+    )
+    console.log(asteroids)
+}, 3000)
 
 function animate() {
     window.requestAnimationFrame(animate)
@@ -117,8 +194,24 @@ function animate() {
             projectile.position.y + projectile.radius < 0
             ) {
             projectiles.splice(i, 1)
-        }
+            }   
     }
+
+    // asteroid management
+    for (let i = asteroids.length - 1; i >= 0; i--) {
+        const asteroid = asteroids[i]
+        asteroid.update()
+
+        // garbage collection for projectiles
+        if (asteroid.position.x + asteroid.radius < 0 ||
+            asteroid.position.x - asteroid.radius > canvas.width ||
+            asteroid.position.y - asteroid.radius > canvas.height ||
+            asteroid.position.y + asteroid.radius < 0
+            ) {
+            asteroids.splice(i, 1)
+            }   
+    }
+
 
     if (keys.w.pressed) {
         player.velocity.x = Math.cos(player.rotation) * SPEED
